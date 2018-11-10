@@ -1,0 +1,36 @@
+div#progess_container {
+    width: 550px;
+	height: 350px;
+}
+
+#progress_name {
+    font-family: sans-serif;
+    height: 30px;
+}
+
+div.progress_item {
+    overflow: hidden;
+    display: table;
+    width: 550px;
+    height: 60px;
+}
+
+.progress_status { 
+    width: 50%; 
+    height: 60px;
+    background-color: #ddd; 
+  } 
+    
+.progress_bar { 
+    width: 10%;
+    height: 30px;
+    background-color: #4CAF50;
+    text-align: center; /* To center it horizontally (if you want) */
+    line-height: 30px; /* To center it vertically */
+    color: white;
+} 
+
+div#progress_bar_template
+{
+	display: none;
+}

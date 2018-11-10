@@ -1,0 +1,158 @@
+body
+{
+	width: 550px;
+	height: 350px;
+	font-family: sans-serif;
+	overflow: hidden;
+	background-color: #1e1e1e;
+}
+
+a{
+	outline: none;
+}
+
+div#download_block
+{
+	clear: both;
+	height: 520px;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+h2#download_title
+{
+	color: #b89a52;
+}
+
+div#download_item_container
+{
+	height: 420px;
+	width: 550px;
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+
+div#download_item_container::-webkit-scrollbar {
+	width: 1em;
+	background-color: #b89a52;
+}
+
+div.download_item
+{
+	display: table;
+	clear: both;
+	/*padding: 1px 2px;*/
+	padding: 3px;
+	overflow: hidden;
+	cursor: default;
+	width: 540px;
+}
+
+div.download_item .left{
+	display: table-cell;
+	vertical-align: middle;
+	width: 460px;
+}
+
+div.download_item .left > div{
+	display: table-cell;
+	vertical-align: middle;
+	width: 50px;
+	color: #2151a8;
+}
+
+div.download_item:hover
+{
+	border-radius: 5px;
+	background-color: #40c9b0;
+	color: #fff;
+}
+
+div.download_item a
+{
+	color: #000;
+	text-decoration: none;
+}
+
+div.download_item:hover a.download_url
+{
+	color: #fff;
+}
+
+
+div.download_item .right{
+	white-space: nowrap;
+	width: 100px;
+}
+
+div.download_item .download_button
+{
+	display: inline-block;
+	border: 1px solid #916248;
+	border-radius: 5px;
+	padding: 5px;
+	color: #fff;
+	text-decoration: none;
+	font-size: 12px;
+	font-weight: bold;
+	background: -webkit-linear-gradient(90deg, #49a886, #49a886);
+	position: relative;
+	margin-left: 5px;
+	width: 60px;
+	text-align:center;
+}
+
+div.download_item .download_button:hover{
+	-webkit-box-shadow: 0px 0px 10px 0px #000;
+}
+
+div.download_item a.download_url
+{
+	display: table-cell;
+	padding-top: 2px;
+	max-width: 350px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	font-family: Tahoma;
+	font-size: 12px;
+	color: #78caf0;
+}
+div.download_item a.download_url[chunk] {
+	font-weight: bold;
+}
+
+div.download_item:hover div.download_url{
+	text-shadow: 1px 1px 0px #000;
+}
+
+div.download_item .item{
+	display: table;
+	padding-top: 2px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-family: Tahoma;
+	font-size: 12px;
+	width: 540px;
+	}
+
+div.download_item .line{
+	height: 1px;
+	max-width: 490px;
+	background-color: #677632;
+	margin-top: 5px;
+	margin-left: 30px;
+}
+
+
+div#download_item_template
+{
+	display: none;
+}
+
+.download_body{
+	position: relative;
+	height: 36px;
+	width: 100%;
+	margin-top: 5px;
+}
