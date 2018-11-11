@@ -38,12 +38,7 @@ class Sniffer {
         function isMedia(details) {
             var url = details.url;
             // Stream video
-            if (/^https?:\/\/(.*)seg(\d+)-frag(\d+)/.test(url.toLowerCase())) {
-                return false;
-            }
-            if (/\/segment\-[0-9]\.m4s/.test(url.toLowerCase())) {
-                return false;
-            }
+
             if (/^https?:\/\/(.*)\.ts/.test(url.toLowerCase())) {
                 return false;
             }
@@ -56,7 +51,7 @@ class Sniffer {
             if ((/^(video)/i).test(getValueByName("content-type", details))) {
                 return true;
             }
-            
+
             return false;
         };
 
@@ -101,6 +96,92 @@ class Sniffer {
             return result;
         };
 
+        function getLinkYoutube(details) {
+            var tabUrl = details.url;
+            if (details.url.indexOf('&') != -1) {
+                var url = details.url.substr(0, details.url.indexOf('&'));
+            } else {
+                var url = details.url;
+            }
+
+            console.log("Detect youtube: ", url);
+            
+            var ajax = new XMLHttpRequest();
+            ajax.open('GET', url, true);
+            ajax.setRequestHeader('Cache-Control', 'no-cache');
+            ajax.timeout = 3000;
+
+            ajax.onload = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    var wrapper = document.createElement('div');
+                    wrapper.innerHTML = this.responseText;
+                    var content = wrapper.querySelector("#player");
+
+                    if (!content) {
+                        content = wrapper.querySelector("#player-wrap");
+                    }
+
+                    content = content.getElementsByTagName("script")[1].innerText;
+                    var tmp = content.match(/[^?]+"url_encoded_fmt_stream_map":"(.*?)"[^?]+/);
+
+                    var l = null;
+                    var title = null;
+                    if (tmp) {
+                        l = tmp[1].split(",");
+                    }
+
+                    tmp = content.match(/[^?]+"title":[\s]*"(.*?)"[^?]+/);
+                    if (tmp) {
+                        title = tmp[1];
+                    }
+
+                    var len = l.length;
+                    for (var i = 0; i < len; i++) {
+                        l[i] = decodeURIComponent(JSON.parse('"' + l[i].replace(/\"/g, '\\"') + '"'));
+                        tmp = l[i].match(/^.*type=video\/(.*?)($|\;)/i);
+                        var ext = null;
+
+                        if (tmp) {
+                            ext = tmp[1];
+                        }
+                        var qualify = null;
+                        tmp = l[i].match(/^.*quality=(.*?)($|\&)/i)
+                        if (tmp) {
+                            qualify = tmp[1];
+                        }
+
+                        var url = l[i].substr(l[i].indexOf("url=") + 4, l[i].length).split(';')[0];
+                        console.log(url);
+                        url = url.replace(/\&type=video\/(.*?)($|\&)/i, "&");
+                        url = url.replace(/\&quality=(.*?)($|\&)/i, "&");
+                        url = url.replace(/\&itag=[0-9]+($|\&$)/i, "");
+                        url = decodeURIComponent(JSON.parse('"' + url.replace(/\"/g, '\\"') + '"'));
+                        console.log(url);
+
+                        var media = {
+                            url: url,
+                            tabId: details.tabId,
+                            tabUrl: tabUrl,
+                            ext: ext,
+                            filename: title,
+                            qualify: qualify,
+                            source: "youtube"
+                        };
+                        console.log(media);
+                        execCallbacks(media);
+                    }
+                    this.abort();
+                }
+
+            };
+
+            ajax.ontimeout = function (e) {
+                ajax.abort();
+            }
+
+            ajax.send(null);
+        }
+
         var callback = function (details) {
             if (!details || details.tabId < 0)
                 return false;
@@ -114,91 +195,11 @@ class Sniffer {
                 }
                 else {
                     if (details.url.indexOf("youtube.com/watch?v=") != -1) {
-                        if(details.url.indexOf('&') != -1) {
-                            var url = details.url.substr(0, details.url.indexOf('&'));
-                        } else {
-                            var url = details.url;
-                        }
-                        
-                        console.log("Detect youtube: ", url);
-                        var ajax = new XMLHttpRequest();
-                        ajax.open('GET', url, true);
-                        ajax.setRequestHeader('Cache-Control', 'no-cache');
-                        ajax.timeout = 3000;
-
-                        ajax.onload = function () {
-                            if (this.readyState == 4 && this.status == 200) {
-                                var wrapper= document.createElement('div');
-                                wrapper.innerHTML= this.responseText;
-                                var content = wrapper.querySelector("#player");
-                                
-                                if (!content) {
-                                    content = wrapper.querySelector("#player-wrap");
-                                }
-
-                                content = content.getElementsByTagName("script")[1].innerText;
-                                var tmp = content.match(/[^?]+"url_encoded_fmt_stream_map":"(.*?)"[^?]+/);
-
-                                var l = null;
-                                var title = null;
-                                if (tmp) {
-                                    l = tmp[1].split(",");
-                                }
-
-                                tmp = content.match(/[^?]+"title":[\s]*"(.*?)"[^?]+/);
-                                if (tmp) {
-                                    title = tmp[1];
-                                }
-
-                                var len = l.length;
-                                for (var i = 0; i < len; i++) {
-                                    l[i] = decodeURIComponent(JSON.parse('"' + l[i].replace(/\"/g, '\\"') + '"'));
-                                    tmp = l[i].match(/^.*type=video\/(.*?)($|\;)/i);
-                                    var ext = null;
-
-                                    if (tmp) {
-                                        ext = tmp[1];
-                                    }
-                                    var qualify = null;
-                                    tmp = l[i].match(/^.*quality=(.*?)($|\&)/i)
-                                    if (tmp) {
-                                        qualify = tmp[1];
-                                    }
-
-                                    var url = l[i].substr(l[i].indexOf("url=") + 4, l[i].length).split(';')[0];
-                                    console.log(url);
-                                    url = url.replace(/\&type=video\/(.*?)($|\&)/i, "&");
-                                    url = url.replace(/\&quality=(.*?)($|\&)/i, "&");
-                                    url = url.replace(/\&itag=[0-9]+($|\&$)/i, "");
-                                    url = decodeURIComponent(JSON.parse('"' + url.replace(/\"/g, '\\"') + '"'));
-                                    console.log(url);
-
-                                    var media = {
-                                        url: url,
-                                        tabId: details.tabId,
-                                        tabUrl: tab.url,
-                                        ext: ext,
-                                        filename: title,
-                                        qualify: qualify,
-                                        source: "youtube"
-                                    };
-                                    console.log(media);
-                                    execCallbacks(media);
-                                }
-                                this.abort();
-                            }
-
-                        };
-
-                        ajax.ontimeout = function (e) {
-
-                            ajax.abort();
-                        }
-
-                        ajax.send(null);
+                        details.tab = tab;
+                        getLinkYoutube(details);
                     } else if (isMedia(details)) {
                         details.tab = tab;
-                        if(tab.url.indexOf("youtube") == -1) {
+                        if (tab.url.indexOf("youtube") == -1) {
                             var media = extractMedia(details);
                             //console.log(media);
                             execCallbacks(media);

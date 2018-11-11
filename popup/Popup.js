@@ -61,7 +61,7 @@ chrome.runtime.getBackgroundPage(function (backgroundPage) {
                         }
                     } else if(media.source == "stream") {
                         VideoDownloader.streamer.start(media);
-                        chrome.tabs.create({ url: "DownloadManager.html" });
+                        chrome.tabs.create({ url: "download_manager/DownloadManager.html" });
                     }
                     
                     event.stopPropagation();
