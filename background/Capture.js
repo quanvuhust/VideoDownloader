@@ -10,10 +10,17 @@ class Capture {
                 VideoDownloader[module].onMediaDetect.addListener(mediaDetectListener);
             }
         });
+        var startLoading = false;
         // Xóa các video khi một tab chuyển sang URL mới
         chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
-            if (changeInfo.status == "complete") {
+            if(startLoading == false) {
+                startLoading = true;
+                console.log("Remove old video.----------------");
                 VideoDownloader.mediaData.removeByTab(tab);
+            }
+
+            if (changeInfo.status == "complete") {
+                startLoading = false;
             }
         });
     }

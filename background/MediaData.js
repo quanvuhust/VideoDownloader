@@ -47,8 +47,6 @@ class MediaData {
         if (this.data[tab.id] != undefined) {
             var len = this.data[tab.id].length;
             for(var i = 0; i < len; i++) {
-                console.log(this.data[tab.id][i].tabUrl);
-                console.log(tab.url);
                 if(this.data[tab.id][i].tabUrl != tab.url) {
                     this.data[tab.id].splice(i, 1);
                     i--;
