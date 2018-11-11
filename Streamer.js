@@ -55,6 +55,7 @@ class StreamWorker {
 	}
 
 	writeToFile() {
+		this.isWriting = true;
 		var worker = this;
 		var blob = [];
 		for(var i = this.startSegment; i < this.file.length; i++) {
@@ -66,13 +67,32 @@ class StreamWorker {
 				break;
 			}
 		}
-
+		
 		if(blob.length > 0) {
 			var onFs = function (fs) {
 				fs.root.getFile(worker.media.filename, {create:false}, function (file) {
 					file.createWriter(function (writer) {	
 						writer.onwriteend = function () {
 							console.log("write success");
+							worker.isWriting = false;
+							if (worker.file.length == worker.startSegment) {
+								worker.finish = true;
+								var path = "filesystem:chrome-extension://" + chrome.runtime.id + "/temporary/" + worker.media.filename;
+								try {
+									chrome.downloads.download({
+										url: path,
+										filename: worker.media.filename + '.' + worker.media.ext,
+										saveAs: true
+									},
+										function (downloadId) {
+											console.log('DOWNLOAD: ', downloadId);
+										}
+									);
+								}
+								catch (e) {
+									console.log(e);
+								}
+							}
 						};
 						writer.onerror = function (err) {
 							console.log('ERROR fileSystem:', err);
@@ -80,6 +100,7 @@ class StreamWorker {
 
 						writer.seek(writer.length);
 						writer.write(new Blob(blob, {type: "video/mp4"}));
+						
 					});
 				});
 			}
@@ -88,29 +109,9 @@ class StreamWorker {
 				webkitRequestFileSystem(TEMPORARY, 1024 * 1024, onFs);
 			} catch (err) {
 				console.log(err);
-			}
-			
-		}
-
-		console.log("Delete " + blob.length + " files");
-
-		if (worker.file.length == this.startSegment) {
-			this.finish = true;
-			var path = "filesystem:chrome-extension://" + chrome.runtime.id + "/temporary/" + worker.media.filename;
-			try {
-				chrome.downloads.download({
-					url: path,
-					filename: worker.media.filename + '.' + worker.media.ext,
-					saveAs: true
-				},
-					function (downloadId) {
-						console.log('DOWNLOAD: ', downloadId);
-					}
-				);
-			}
-			catch (e) {
-				console.log(e);
-			}
+			}	
+		} else {
+			worker.isWriting = false;
 		}
 	}
 
@@ -147,7 +148,10 @@ class StreamWorker {
 					}
 
 					worker.file[i].state = State.COMPLETE;
-					worker.writeToFile();
+					if(!worker.isWriting) {
+						worker.writeToFile();
+					}
+					
 					worker.nQueue--;
 					delete worker.queue[queueIndex];
 					worker.resetQueue();
@@ -182,6 +186,7 @@ class StreamWorker {
 	}
 
 	resetQueue() {
+		var worker = this;
 		var pick = [];
 		var s = "";
 		if(this.file.length < this.startSegment + 10) {
@@ -220,10 +225,22 @@ class StreamWorker {
 		}
 		console.log("queue:" + s);
 		console.log("--------------------------------------------")
-		for(var i = 0; i < this.MAX_QUEUE; i++) {
-			if(this.queue[i] != undefined && this.file[this.queue[i]].state == State.READY) {
-				this.loadTsFile(this.file[this.queue[i]].url, i);
+		if(this.nQueue > 0) {
+			for(var i = 0; i < this.MAX_QUEUE; i++) {
+				if(this.queue[i] != undefined && this.file[this.queue[i]].state == State.READY) {
+					this.loadTsFile(this.file[this.queue[i]].url, i);
+				}
 			}
+		} else {
+			var checkWriting = setInterval(update, 100);
+			function update() {
+				console.log(worker.isWriting);
+				if(!worker.isWriting) {
+					clearInterval(checkWriting);
+					worker.writeToFile();
+				}
+			};
+			
 		}
 	}
 
@@ -245,6 +262,7 @@ class StreamWorker {
 			var onFs = function (fs) {
 				fs.root.getFile(media.filename, {create:true}, function (file) {
 					file.createWriter(function (writer) {
+						writer.truncate(0);
 						console.log(file);
 						
 						writer.onwriteend = function () {
@@ -293,6 +311,7 @@ class StreamWorker {
 		this.startSegment = 0;
 		this.media = null;
 		this.finish = false;
+		this.isWriting = false;
 	}
 }
 
