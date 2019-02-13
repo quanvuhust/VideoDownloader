@@ -11,23 +11,26 @@ chrome.runtime.getBackgroundPage(function (backgroundPage) {
             }
 
             function buildItem(media) {
-                function _get(className) {
-                    return item.getElementsByClassName(className)[0];
-                }
+                var item = $("#download_item_template").clone();
+                item.removeAttr("id");
+                item.attr("data-id", media.id);
+                item.show();
+                //item.attr("hidden", false);
 
-                var item = document.getElementById("download_item_template").cloneNode(true);
-                item.removeAttribute("id");
-                item.setAttribute("data-id", media.id);
-                item.setAttribute("hidden", false);
+                var download_button = item.find(".download_button");
+                download_button.attr("href", "#");
 
-                _get("download_button").setAttribute("href", "#");
-                _get("download_url").textContent = media.filename;
-                _get("download_url").setAttribute("href", media.url);
-                _get("download_url").setAttribute("title", media.url);
+                var download_url = item.find(".download_url");
+
+                download_url.text(media.filename);
+                media.filename = media.filename.replace(/[\/:\\*?"<>|]/i, " ");
+
+                download_url.attr("href", media.url);
+                download_url.attr("title", media.url);
 
                 function onClick(event) {
                     console.log('startDownload', media);
-                    media.filename = media.filename.replace(/[\/:\\*?"<>|]/i, " ");
+                    //media.filename = media.filename.replace(/[\/:\\*?"<>|]/i, " ");
                     console.log(media.filename);
                     if(media.source == "sniffer") {
                         try {
@@ -66,16 +69,18 @@ chrome.runtime.getBackgroundPage(function (backgroundPage) {
                     
                     event.stopPropagation();
                 }
+
+                var download_size = item.find(".download_size");
                 if(media.source == "stream") {
-                    _get("download_size").textContent = "Stream";
+                    download_size.text("Stream");
                 } else if(media.source == "youtube") {
-                    _get("download_size").textContent = "[" + media.qualify + "]";
+                    download_size.text("[" + media.qualify + "]");
                 } else {
-                    _get("download_size").textContent = convertMediaSize(media.size);
+                    download_size.text(convertMediaSize(media.size));
                 }
                 
-                _get("download_button").addEventListener("click", onClick, false);
-                return item;
+                download_button.click(onClick);
+                return item.get(0);
             }
 
             this.init = function () {
@@ -83,28 +88,27 @@ chrome.runtime.getBackgroundPage(function (backgroundPage) {
 
                 function reset(tab) {
                     var media = VideoDownloader.mediaData.getMediaByTabId(tab.id);
-                    var container = document.getElementById("download_item_container");
+                    var container = $("#download_item_container");
 
                     if (!media || media.length == 0) {
-                        container.textContent = "Không tìm thấy video.";
-                        container.style.color = "#b89a52";
+                        container.text("Không tìm thấy video.");
+                        container.css("color", "#b89a52");
                         return;
                     }
 
-                    var title = document.getElementById("download_title");
+                    var title = $("#download_title");
 
                     if (title) {
-                        title.removeAttribute("hidden");
+                        title.show();
+                        //title.removeAttr("hidden");
                     }
 
-                    while (container.firstChild) {
-                        container.removeChild(container.firstChild);
-                    }
+                    container.empty();
 
                     media.forEach(function (m) {
                         try {
                             var item = buildItem(m);
-                            container.appendChild(item);
+                            container.append(item);
                         }
                         catch (e) {
                             console.log(e);

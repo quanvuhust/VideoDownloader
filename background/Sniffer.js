@@ -113,8 +113,10 @@ class Sniffer {
 
             ajax.onload = function () {
                 if (this.readyState == 4 && this.status == 200) {
-                    var wrapper = document.createElement('div');
-                    wrapper.innerHTML = this.responseText;
+                    //var wrapper = document.createElement('div');
+                    //wrapper.innerHTML = this.responseText;
+                    var parser = new DOMParser();
+                    var wrapper = parser.parseFromString(this.responseText, 'text/html');
                     var content = wrapper.querySelector("#player");
 
                     if (!content) {
@@ -137,6 +139,7 @@ class Sniffer {
 
                     var len = l.length;
                     for (var i = 0; i < len; i++) {
+                        console.log(l[i]);
                         l[i] = decodeURIComponent(JSON.parse('"' + l[i].replace(/\"/g, '\\"') + '"'));
                         tmp = l[i].match(/^.*type=video\/(.*?)($|\;)/i);
                         var ext = null;
@@ -154,7 +157,8 @@ class Sniffer {
                         console.log(url);
                         url = url.replace(/\&type=video\/(.*?)($|\&)/i, "&");
                         url = url.replace(/\&quality=(.*?)($|\&)/i, "&");
-                        url = url.replace(/\&itag=[0-9]+($|\&$)/i, "");
+                        url = url.replace(/\&itag=[0-9]+($|\&$)/i, "&");
+                        url = url.replace(/&$/,"");
                         url = decodeURIComponent(JSON.parse('"' + url.replace(/\"/g, '\\"') + '"'));
                         console.log(url);
 

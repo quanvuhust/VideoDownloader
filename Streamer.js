@@ -341,8 +341,3 @@ class Streamer {
 }
 
 VideoDownloader.streamer = new Streamer();
-/*
-streamer.start({url: "https://ztv-mcloud-lpl-s3-te-vnno-vn-8.zadn.vn/AWiWQ9V6JPU/whls/vod/480/yFNqlM8mCJ4H4H9ol2C/ThucTapSinhXinhDep_01_muxed.m3u8?authen=exp=1541659102~acl=/AWiWQ9V6JPU/*~hmac=bebc5f6e2f0486a3f687d4105a7d3651",
-                filename: "hls103.mp4"
-});
-*/
